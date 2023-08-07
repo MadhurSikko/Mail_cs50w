@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
+  
+
   // By default, load the inbox
   load_mailbox('inbox');
 });
@@ -13,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function compose_email() {
 
   // Show compose view and hide other views
+  document.querySelector('#content').style.display = 'none';
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
@@ -59,17 +62,50 @@ function compose_email() {
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
+  document.querySelector('#content').style.display = 'none';
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
-  load_allMail(mailbox)
+  if (mailbox === "archive") {
+    load_archive();
+  } else {
+    load_allMail(mailbox);
+  }
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 }
 
 function content(id) {
-  console.log(id)
+  document.querySelector('#content').style.display = 'block';
+  document.querySelector('#sent-mail').innerHTML = '';
+  document.querySelector('#mail-content').innerHTML = '';
+
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+    const container1 = document.createElement('div');
+    const container2 = document.createElement('div');
+    const container3 = document.createElement('div');
+    const container4 = document.createElement('div');
+    
+    container1.innerHTML = `<b>From:</b>${email.sender}`;
+    document.querySelector('#mail-content').append(container1);
+
+    container2.innerHTML = `<b>Recipients:</b>${email.recipients}`;
+    document.querySelector('#mail-content').append(container2);
+
+    container3.innerHTML = `<b>Subject:</b>${email.subject}`;
+    document.querySelector('#mail-content').append(container3);
+
+    container4.innerHTML = `<b>Body:</b>${email.body}`;
+    document.querySelector('#mail-content').append(container4);
+
+  })
+
+  document.querySelector('#read').addEventListener('click', () => read_archive(id, "read"));
+  document.querySelector('#archive').addEventListener('click', () => read_archive(id, "archived"));
+  
 }
 
 function load_allMail(mailbox) {
@@ -79,14 +115,57 @@ function load_allMail(mailbox) {
   .then(response => response.json())
   .then(emails => {
     emails.forEach(element => {
-
-      let container = document.createElement('div');
-      container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
-      document.querySelector('#sent-mail').append(container);
-
+      if (element.archived == false) {
+        let container = document.createElement('div');
+        if (element.read == true ) {
+          container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
+          container.style.color = "grey";
+        } 
+        container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
+        document.querySelector('#sent-mail').append(container);
+      }
+      
     });
 
   })
 }
 
+function read_archive(id, str) {
+  if (str === "read") {
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify ({
+        read: true
+      })
+    })
+  } else {
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify ({
+        archived: true
+      })
+    })
+  }
+}
 
+function load_archive() {
+  document.querySelector('#sent-mail').innerHTML = '';
+
+  fetch(`/emails/archive `)
+  .then(response => response.json())
+  .then(emails => {
+    emails.forEach(element => {
+      if (element.archived == true) {
+        let container = document.createElement('div');
+        if (element.read == true ) {
+          container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
+          container.style.color = "grey";
+        } 
+        container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
+        document.querySelector('#sent-mail').append(container);
+      }
+      
+    });
+
+  })
+}
