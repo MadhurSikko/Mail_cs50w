@@ -2,7 +2,15 @@ textarea {
     min-height: 400px;
 }
 
-#container-sent {
+.container-sent {
+    background-color: white;
     border: 1px solid black;
+    display: flex;
+    justify-content: space-between;
+    height: fit-content;
     margin-bottom: 5px;
+}
+
+.container-sent:hover {
+    background-color: grey;
 }

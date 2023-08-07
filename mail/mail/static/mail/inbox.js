@@ -62,32 +62,31 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
-  if (mailbox === "sent") {
-    
-    load_sentMail()
-  }
+  load_allMail(mailbox)
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 }
 
-function load_sentMail() {
+function content(id) {
+  console.log(id)
+}
+
+function load_allMail(mailbox) {
   document.querySelector('#sent-mail').innerHTML = '';
 
-  fetch('/emails/sent')
+  fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
     emails.forEach(element => {
 
-      console.log(element.recipients)
-      console.log(element.subject)
-      console.log(element.body)
-
       let container = document.createElement('div');
-      container.innerHTML = `<div id="container-sent">${element.recipients}    <b>${element.subject}</b> ${element.body.slice(0, 30)} ${element.timestamp}</div>`;
+      container.innerHTML = `<div onclick="content(${element.id})" class="container-sent">${element.recipients} <b>${element.subject}</b> ${element.body} <p>      </p>${element.timestamp} </div>`;
       document.querySelector('#sent-mail').append(container);
 
     });
 
   })
 }
+
+
